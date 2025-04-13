@@ -9,14 +9,9 @@ import (
 	"time"
 )
 
-func handlerAddfeed(s *state, cmd command) error {
+func handlerAddfeed(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) < 2 {
 		return errors.New("addfeed expects feedName andurl")
-	}
-
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
 	}
 
 	feedParams := database.CreateFeedParams{
@@ -34,5 +29,20 @@ func handlerAddfeed(s *state, cmd command) error {
 	}
 
 	fmt.Println(feed)
+
+	createFeedFollowParams := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	}
+
+	feedFollow, err := s.db.CreateFeedFollow(context.Background(), createFeedFollowParams)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%+v", feedFollow)
 	return nil
 }
